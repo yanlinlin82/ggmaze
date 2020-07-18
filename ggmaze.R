@@ -35,7 +35,8 @@ plot_maze <- function(a, answer = FALSE, polar = FALSE) {
   g
 }
 
-create_maze <- function(w, h, start = NULL, end = NULL, polar = FALSE,
+create_maze <- function(w, h, start = NULL, end = NULL,
+                        prob = 0.1, polar = FALSE,
                         plot = FALSE, interact = FALSE) {
   if (missing(start)) {
     start <- sample(w, 1)
@@ -81,7 +82,7 @@ create_maze <- function(w, h, start = NULL, end = NULL, polar = FALSE,
     i <- which((a$visited > 0) & !a$sealed)
     print(i)
     if (length(i) > 1) {
-      if (runif(1) < 0.1) {
+      if (runif(1) < prob) {
         i <- sample(i, 1)
       } else {
         i <- i[which.max(a$visited[i])]
