@@ -28,11 +28,14 @@ plot_maze <- function(a, answer = FALSE, polar = FALSE) {
       geom_point(aes(x = x0 + 0.5, y = y0, color = digging_right), shape = 9) +
       scale_color_manual(values = c(NA, "black"))
   }
+  if (polar) {
+    g <- g +
+      coord_polar()
+  }
   g
 }
 
-create_maze <- function(w, h,
-                        start = NULL, end = NULL,
+create_maze <- function(w, h, start = NULL, end = NULL, polar = FALSE,
                         plot = FALSE, interact = FALSE) {
   if (missing(start)) {
     start <- sample(w, 1)
@@ -68,7 +71,7 @@ create_maze <- function(w, h,
   a$visited[a$x == start & a$y == 0] <- visited
 
   if (plot) {
-    print(plot_maze(a, answer = TRUE))
+    print(plot_maze(a, answer = TRUE, polar = polar))
   }
   if (interact) {
     readLines(n = 1)
@@ -92,9 +95,17 @@ create_maze <- function(w, h,
       if (a$visited[a$x == x - 1 & a$y == y] == 0) {
         d <- c(d, "left")
       }
+    } else if (polar) {
+      if (a$visited[a$x == w - 1 & a$y == y] == 0) {
+        d <- c(d, "left")
+      }
     }
     if (x < w - 1) {
       if (a$visited[a$x == x + 1 & a$y == y] == 0) {
+        d <- c(d, "right")
+      }
+    } else if (polar) {
+      if (a$visited[a$x == 0 & a$y == y] == 0) {
         d <- c(d, "right")
       }
     }
@@ -119,19 +130,29 @@ create_maze <- function(w, h,
       }
       cat("> select: ", d, "\n")
       if (d == "left") {
+        if (x == 0) {
+          next_x <- w - 1
+        } else {
+          next_x = x - 1
+        }
         a$vline[a$x == x & a$y == y] <- FALSE
         visited <- visited + 1
-        a$visited[a$x == x - 1 & a$y == y] <- visited
-        a$digging_right[a$x == x - 1 & a$y == y] <- TRUE
+        a$visited[a$x == next_x & a$y == y] <- visited
+        a$digging_right[a$x == next_x & a$y == y] <- TRUE
         a$track_left[a$x == x & a$y == y] <- TRUE
-        a$track_right[a$x == x - 1 & a$y == y] <- TRUE
+        a$track_right[a$x == next_x & a$y == y] <- TRUE
       } else if (d == "right") {
-        a$vline[a$x == x + 1 & a$y == y] <- FALSE
+        if (x == w - 1) {
+          next_x <- 0
+        } else {
+          next_x <- x + 1
+        }
+        a$vline[a$x == next_x & a$y == y] <- FALSE
         visited <- visited + 1
-        a$visited[a$x == x + 1 & a$y == y] <- visited
+        a$visited[a$x == next_x & a$y == y] <- visited
         a$digging_right[a$x == x & a$y == y] <- TRUE
         a$track_right[a$x == x & a$y == y] <- TRUE
-        a$track_left[a$x == x + 1 & a$y == y] <- TRUE
+        a$track_left[a$x == next_x & a$y == y] <- TRUE
       } else if (d == "down") {
         a$hline[a$x == x & a$y == y] <- FALSE
         visited <- visited + 1
@@ -149,7 +170,7 @@ create_maze <- function(w, h,
       }
 
       if (plot) {
-        print(plot_maze(a, answer = TRUE))
+        print(plot_maze(a, answer = TRUE, polar = polar))
       }
       if (interact) {
         readLines(n = 1)
@@ -170,3 +191,9 @@ a <- create_maze(50, 35)
 g <- plot_maze(a, FALSE)
 print(g)
 ggsave(g, filename = "big.png", width = 20, height = 13)
+
+# generate circle maze
+a <- create_maze(20, 8, 1, 11, polar = TRUE)
+g <- plot_maze(a, FALSE, polar = TRUE)
+print(g)
+ggsave(g, filename = "circle.png", width = 10, height = 10)
